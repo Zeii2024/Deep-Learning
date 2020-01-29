@@ -13,6 +13,7 @@ from keras.models import Sequential, Model
 from keras.utils import to_categorical
 from keras.layers import Dense,Input, Dropout, Embedding, LSTM, Bidirectional, Flatten
 from keras.layers.recurrent import SimpleRNN
+from keras.callbacks import EarlyStopping
 
 def RNN(maxlen=380, max_features=3800, embed_size=32):
     '''
@@ -49,11 +50,43 @@ def BRNN(maxlen=380, max_features=3800, embed_size=32):
     model.add(Dropout(0.5))
     model.add(Bidirectional(SimpleRNN(16, return_sequences=True),merge_mode='concat'))
     model.add(Dropout(0.5))
-    model.add(Flatten())
+    model.add(Flatten()) # 全连接层
     model.add(Dense(1, activation='sigmoid'))
 
     return model
 
-# model = RNN()
+model = RNN()
 # model = BRNN()
 # model.summary()
+
+# Train
+model.compile(loss='binary_crossentropy',
+                optimizer='adam',
+                metrics=['accuracy'])
+
+es = EarlyStopping(monitor='val_acc', patience=5, mode='auto')
+'''
+EarlyStopping 用于提前终止训练，是fit中callback的输入值之一；
+monitor：需要监测的量, 有'val_loss', 'val_acc', 'acc', 'loss'
+patience: 指可以容忍在多少个epoch内没有improvement
+verbose = 0: 信息显示的模式
+mode：有'min', 'max', 'auto',指当监测指标不再减小或增大时，停止训练
+'''
+# need train and test data
+x_test, y_test, x_train, y_train = 0, 0, 0, 0
+batch_size = 128
+epochs = 20
+
+# fit
+model.fit(x_train, y_train,
+            validation_split=0.1,
+            batch_size=batch_size,
+            epochs=epochs,
+            callbacks=[es],   # callbacks训练终止的条件，输入是list
+            shuffle=True)
+
+
+# evaluation
+scores = model.evaluate(x_test, y_test)
+print("loss: ", scores[0])
+print("acc: ", scores[1])
