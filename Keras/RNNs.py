@@ -85,7 +85,6 @@ model.fit(x_train, y_train,
             callbacks=[es],   # callbacks训练终止的条件，输入是list
             shuffle=True)
 
-
 # evaluation
 scores = model.evaluate(x_test, y_test)
 print("loss: ", scores[0])
